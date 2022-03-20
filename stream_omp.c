@@ -57,7 +57,7 @@
  *          that should be good to about 5% precision.
  */
 
-# define ELEMENTS	2000000
+long ELEMENTS = 2000000;
 # define NTIMES	10
 # define OFFSET	0
 
@@ -125,8 +125,11 @@ main(int argc, char **argv)
     register int	j, k;
     double		scalar, t, times[4][NTIMES];
 
-    if (argc==2 && strcmp(argv[1], "quiet")==0) {
+    if (argc>=2 && strcmp(argv[1], "quiet")==0) {
         verbose = 0;
+    }
+    if (argc>=3) {
+        ELEMENTS = atol(argv[2]);
     }
 
     a = malloc(sizeof(double)*(ELEMENTS+OFFSET));
