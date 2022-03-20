@@ -8,3 +8,6 @@ all: $(PROGS)
 
 stream_omp: stream_omp.c
 	gcc -mcmodel=large -fopenmp $< -o $@
+
+clean:
+	rm -f $(PROGS)
