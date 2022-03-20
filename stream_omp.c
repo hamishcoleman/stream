@@ -45,6 +45,7 @@
 # include <float.h>
 # include <limits.h>
 # include <sys/time.h>
+#include <omp.h>
 
 /* INSTRUCTIONS:
  *
