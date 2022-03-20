@@ -51,12 +51,12 @@
 /* INSTRUCTIONS:
  *
  *	1) Stream requires a good bit of memory to run.  Adjust the
- *          value of 'N' (below) to give a 'timing calibration' of 
+ *          value of 'ELEMENTS' (below) to give a 'timing calibration' of
  *          at least 20 clock-ticks.  This will provide rate estimates
  *          that should be good to about 5% precision.
  */
 
-# define N	2000000
+# define ELEMENTS	2000000
 # define NTIMES	10
 # define OFFSET	0
 
@@ -90,9 +90,9 @@
 # define MAX(x,y) ((x)>(y)?(x):(y))
 # endif
 
-static double	a[N+OFFSET],
-		b[N+OFFSET],
-		c[N+OFFSET];
+static double	a[ELEMENTS+OFFSET],
+		b[ELEMENTS+OFFSET],
+		c[ELEMENTS+OFFSET];
 
 static double	avgtime[4] = {0}, maxtime[4] = {0},
 		mintime[4] = {FLT_MAX,FLT_MAX,FLT_MAX,FLT_MAX};
@@ -101,10 +101,10 @@ static char	*label[4] = {"Copy:      ", "Scale:     ",
     "Add:       ", "Triad:     "};
 
 static double	bytes[4] = {
-    2 * sizeof(double) * N,
-    2 * sizeof(double) * N,
-    3 * sizeof(double) * N,
-    3 * sizeof(double) * N
+    2 * sizeof(double) * ELEMENTS,
+    2 * sizeof(double) * ELEMENTS,
+    3 * sizeof(double) * ELEMENTS,
+    3 * sizeof(double) * ELEMENTS
     };
 
 extern double mysecond();
@@ -143,9 +143,9 @@ main(int argc, char **argv)
 	BytesPerWord);
 
     qprintf(1,HLINE);
-    printf("Array size = %d, Offset = %d\n" , N, OFFSET);
+    printf("Array size = %d, Offset = %d\n" , ELEMENTS, OFFSET);
     printf("Total memory required = %.1f MB.\n",
-	(3.0 * BytesPerWord) * ( (double) N / 1048576.0));
+	(3.0 * BytesPerWord) * ( (double) ELEMENTS / 1048576.0));
     qprintf(1,"Each test is run %d times, but only\n", NTIMES);
     qprintf(1,"the *best* time for each is used.\n");
 
@@ -162,7 +162,7 @@ main(int argc, char **argv)
 
     /* Get initial value for system clock. */
 #pragma omp parallel for
-    for (j=0; j<N; j++) {
+    for (j=0; j<ELEMENTS; j++) {
 	a[j] = 1.0;
 	b[j] = 2.0;
 	c[j] = 0.0;
@@ -180,7 +180,7 @@ main(int argc, char **argv)
 
     t = mysecond();
 #pragma omp parallel for
-    for (j = 0; j < N; j++)
+    for (j = 0; j < ELEMENTS; j++)
 	a[j] = 2.0E0 * a[j];
     t = 1.0E6 * (mysecond() - t);
 
@@ -207,7 +207,7 @@ main(int argc, char **argv)
         tuned_STREAM_Copy();
 #else
 #pragma omp parallel for
-	for (j=0; j<N; j++)
+	for (j=0; j<ELEMENTS; j++)
 	    c[j] = a[j];
 #endif
 	times[0][k] = mysecond() - times[0][k];
@@ -217,7 +217,7 @@ main(int argc, char **argv)
         tuned_STREAM_Scale(scalar);
 #else
 #pragma omp parallel for
-	for (j=0; j<N; j++)
+	for (j=0; j<ELEMENTS; j++)
 	    b[j] = scalar*c[j];
 #endif
 	times[1][k] = mysecond() - times[1][k];
@@ -227,7 +227,7 @@ main(int argc, char **argv)
         tuned_STREAM_Add();
 #else
 #pragma omp parallel for
-	for (j=0; j<N; j++)
+	for (j=0; j<ELEMENTS; j++)
 	    c[j] = a[j]+b[j];
 #endif
 	times[2][k] = mysecond() - times[2][k];
@@ -237,7 +237,7 @@ main(int argc, char **argv)
         tuned_STREAM_Triad(scalar);
 #else
 #pragma omp parallel for
-	for (j=0; j<N; j++)
+	for (j=0; j<ELEMENTS; j++)
 	    a[j] = b[j]+scalar*c[j];
 #endif
 	times[3][k] = mysecond() - times[3][k];
@@ -345,14 +345,14 @@ int checkSTREAMresults ()
             cj = aj+bj;
             aj = bj+scalar*cj;
         }
-	aj = aj * (double) (N);
-	bj = bj * (double) (N);
-	cj = cj * (double) (N);
+	aj = aj * (double) (ELEMENTS);
+	bj = bj * (double) (ELEMENTS);
+	cj = cj * (double) (ELEMENTS);
 
 	asum = 0.0;
 	bsum = 0.0;
 	csum = 0.0;
-	for (j=0; j<N; j++) {
+	for (j=0; j<ELEMENTS; j++) {
 		asum += a[j];
 		bsum += b[j];
 		csum += c[j];
@@ -394,7 +394,7 @@ void tuned_STREAM_Copy()
 {
 	int j;
 #pragma omp parallel for
-        for (j=0; j<N; j++)
+        for (j=0; j<ELEMENTS; j++)
             c[j] = a[j];
 }
 
@@ -402,7 +402,7 @@ void tuned_STREAM_Scale(double scalar)
 {
 	int j;
 #pragma omp parallel for
-	for (j=0; j<N; j++)
+	for (j=0; j<ELEMENTS; j++)
 	    b[j] = scalar*c[j];
 }
 
@@ -410,7 +410,7 @@ void tuned_STREAM_Add()
 {
 	int j;
 #pragma omp parallel for
-	for (j=0; j<N; j++)
+	for (j=0; j<ELEMENTS; j++)
 	    c[j] = a[j]+b[j];
 }
 
@@ -418,6 +418,6 @@ void tuned_STREAM_Triad(double scalar)
 {
 	int j;
 #pragma omp parallel for
-	for (j=0; j<N; j++)
+	for (j=0; j<ELEMENTS; j++)
 	    a[j] = b[j]+scalar*c[j];
 }
