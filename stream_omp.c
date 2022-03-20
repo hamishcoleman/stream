@@ -46,6 +46,7 @@
 # include <limits.h>
 # include <sys/time.h>
 #include <omp.h>
+#include <string.h>
 
 /* INSTRUCTIONS:
  *
@@ -114,34 +115,48 @@ extern void tuned_STREAM_Scale(double scalar);
 extern void tuned_STREAM_Add();
 extern void tuned_STREAM_Triad(double scalar);
 #endif
+
+#define qprintf(level, fmt, args...) \
+    if (verbose>=level) { \
+        printf(fmt, ##args); \
+    }
+
+int verbose = 1;
+
 int
-main()
+main(int argc, char **argv)
     {
     int			quantum, checktick();
     int			BytesPerWord;
     register int	j, k;
     double		scalar, t, times[4][NTIMES];
 
+    if (argc==2 && strcmp(argv[1], "quiet")==0) {
+        verbose = 0;
+    }
+
     /* --- SETUP --- determine precision and check timing --- */
 
-    printf(HLINE);
+    qprintf(1,HLINE);
     BytesPerWord = sizeof(double);
-    printf("This system uses %d bytes per DOUBLE PRECISION word.\n",
+    qprintf(1,"This system uses %d bytes per DOUBLE PRECISION word.\n",
 	BytesPerWord);
 
-    printf(HLINE);
+    qprintf(1,HLINE);
     printf("Array size = %d, Offset = %d\n" , N, OFFSET);
     printf("Total memory required = %.1f MB.\n",
 	(3.0 * BytesPerWord) * ( (double) N / 1048576.0));
-    printf("Each test is run %d times, but only\n", NTIMES);
-    printf("the *best* time for each is used.\n");
+    qprintf(1,"Each test is run %d times, but only\n", NTIMES);
+    qprintf(1,"the *best* time for each is used.\n");
 
 #ifdef _OPENMP
-    printf(HLINE);
+    qprintf(1,HLINE);
 #pragma omp parallel private(k)
     {
-    k = omp_get_num_threads();
-    printf ("Number of Threads requested = %i\n",k);
+        k = omp_get_num_threads();
+        if (omp_get_thread_num() == 0) {
+            printf ("Number of Threads requested = %i\n",k);
+        }
     }
 #endif
 
@@ -153,14 +168,15 @@ main()
 	c[j] = 0.0;
 	}
 
-    printf(HLINE);
+    qprintf(1,HLINE);
 
-    if  ( (quantum = checktick()) >= 1) 
-	printf("Your clock granularity/precision appears to be "
+    if  ( (quantum = checktick()) >= 1) {
+	qprintf(1,"Your clock granularity/precision appears to be "
 	    "%d microseconds.\n", quantum);
-    else
+    } else {
 	printf("Your clock granularity appears to be "
 	    "less than one microsecond.\n");
+    }
 
     t = mysecond();
 #pragma omp parallel for
@@ -168,18 +184,18 @@ main()
 	a[j] = 2.0E0 * a[j];
     t = 1.0E6 * (mysecond() - t);
 
-    printf("Each test below will take on the order"
+    qprintf(1,"Each test below will take on the order"
 	" of %d microseconds.\n", (int) t  );
-    printf("   (= %d clock ticks)\n", (int) (t/quantum) );
-    printf("Increase the size of the arrays if this shows that\n");
-    printf("you are not getting at least 20 clock ticks per test.\n");
+    qprintf(1,"   (= %d clock ticks)\n", (int) (t/quantum) );
+    qprintf(1,"Increase the size of the arrays if this shows that\n");
+    qprintf(1,"you are not getting at least 20 clock ticks per test.\n");
 
-    printf(HLINE);
+    qprintf(1,HLINE);
 
-    printf("WARNING -- The above is only a rough guideline.\n");
-    printf("For best results, please be sure you know the\n");
-    printf("precision of your system timer.\n");
-    printf(HLINE);
+    qprintf(1,"WARNING -- The above is only a rough guideline.\n");
+    qprintf(1,"For best results, please be sure you know the\n");
+    qprintf(1,"precision of your system timer.\n");
+    qprintf(1,HLINE);
     
     /*	--- MAIN LOOP --- repeat test cases NTIMES times --- */
 
@@ -249,11 +265,11 @@ main()
 	       mintime[j],
 	       maxtime[j]);
     }
-    printf(HLINE);
+    qprintf(1,HLINE);
 
     /* --- Check Results --- */
     checkSTREAMresults();
-    printf(HLINE);
+    qprintf(1,HLINE);
 
     return 0;
 }
