@@ -108,7 +108,7 @@ static double	bytes[4] = {
     };
 
 extern double mysecond();
-extern void checkSTREAMresults();
+int checkSTREAMresults();
 #ifdef TUNED
 extern void tuned_STREAM_Copy();
 extern void tuned_STREAM_Scale(double scalar);
@@ -268,10 +268,10 @@ main(int argc, char **argv)
     qprintf(1,HLINE);
 
     /* --- Check Results --- */
-    checkSTREAMresults();
+    int r = checkSTREAMresults();
     qprintf(1,HLINE);
 
-    return 0;
+    return r;
 }
 
 # define	M	20
@@ -323,7 +323,7 @@ double mysecond()
         return ( (double) tp.tv_sec + (double) tp.tv_usec * 1.e-6 );
 }
 
-void checkSTREAMresults ()
+int checkSTREAMresults ()
 {
 	double aj,bj,cj,scalar;
 	double asum,bsum,csum;
@@ -370,19 +370,23 @@ void checkSTREAMresults ()
 		printf ("Failed Validation on array a[]\n");
 		printf ("        Expected  : %f \n",aj);
 		printf ("        Observed  : %f \n",asum);
+                return 1;
 	}
 	else if (abs(bj-bsum)/bsum > epsilon) {
 		printf ("Failed Validation on array b[]\n");
 		printf ("        Expected  : %f \n",bj);
 		printf ("        Observed  : %f \n",bsum);
+                return 1;
 	}
 	else if (abs(cj-csum)/csum > epsilon) {
 		printf ("Failed Validation on array c[]\n");
 		printf ("        Expected  : %f \n",cj);
 		printf ("        Observed  : %f \n",csum);
+                return 1;
 	}
 	else {
 		printf ("Solution Validates\n");
+                return 0;
 	}
 }
 
