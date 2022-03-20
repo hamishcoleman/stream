@@ -47,6 +47,7 @@
 # include <sys/time.h>
 #include <omp.h>
 #include <string.h>
+#include <stdlib.h>
 
 /* INSTRUCTIONS:
  *
@@ -90,9 +91,7 @@
 # define MAX(x,y) ((x)>(y)?(x):(y))
 # endif
 
-static double	a[ELEMENTS+OFFSET],
-		b[ELEMENTS+OFFSET],
-		c[ELEMENTS+OFFSET];
+static double	*a, *b, *c;
 
 static double	avgtime[4] = {0}, maxtime[4] = {0},
 		mintime[4] = {FLT_MAX,FLT_MAX,FLT_MAX,FLT_MAX};
@@ -100,12 +99,7 @@ static double	avgtime[4] = {0}, maxtime[4] = {0},
 static char	*label[4] = {"Copy:      ", "Scale:     ",
     "Add:       ", "Triad:     "};
 
-static double	bytes[4] = {
-    2 * sizeof(double) * ELEMENTS,
-    2 * sizeof(double) * ELEMENTS,
-    3 * sizeof(double) * ELEMENTS,
-    3 * sizeof(double) * ELEMENTS
-    };
+double	bytes[4];
 
 extern double mysecond();
 int checkSTREAMresults();
@@ -134,6 +128,19 @@ main(int argc, char **argv)
     if (argc==2 && strcmp(argv[1], "quiet")==0) {
         verbose = 0;
     }
+
+    a = malloc(sizeof(double)*(ELEMENTS+OFFSET));
+    b = malloc(sizeof(double)*(ELEMENTS+OFFSET));
+    c = malloc(sizeof(double)*(ELEMENTS+OFFSET));
+
+    if (a == NULL) { perror("malloc"); }
+    if (b == NULL) { perror("malloc"); }
+    if (c == NULL) { perror("malloc"); }
+
+    bytes[0] = 2 * sizeof(double) * ELEMENTS;
+    bytes[1] = 2 * sizeof(double) * ELEMENTS;
+    bytes[2] = 3 * sizeof(double) * ELEMENTS;
+    bytes[3] = 3 * sizeof(double) * ELEMENTS;
 
     /* --- SETUP --- determine precision and check timing --- */
 
